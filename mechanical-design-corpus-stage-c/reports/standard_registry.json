@@ -1,0 +1,58 @@
+[
+  {
+    "standard_no": "GB/T 3480.1-2019",
+    "title": "直齿轮和斜齿轮承载能力计算 第1部分：基本原理、概述及通用影响系数",
+    "status": "current",
+    "scope_note": "基本原理与通用影响系数；具体强度计算还需选择对应分册",
+    "verified_on": "2026-07-13",
+    "source_url": "https://std.samr.gov.cn/gb/search/gbDetailed?id=9BFCCC5CEDF30F87E05397BE0A0A747C"
+  },
+  {
+    "standard_no": "GB/T 3480.2-2021",
+    "title": "直齿轮和斜齿轮承载能力计算 第2部分：齿面接触强度（点蚀）计算",
+    "status": "current",
+    "scope_note": "齿面接触强度（点蚀）计算",
+    "verified_on": "2026-07-13",
+    "source_url": "https://std.samr.gov.cn/gb/search/gbDetailed?id=9BFCCC5CEDF30F87E05397BE0A0A747C"
+  },
+  {
+    "standard_no": "GB/T 3480.3-2021",
+    "title": "直齿轮和斜齿轮承载能力计算 第3部分：轮齿弯曲强度计算",
+    "status": "current",
+    "scope_note": "轮齿弯曲强度计算",
+    "verified_on": "2026-07-13",
+    "source_url": "https://std.samr.gov.cn/gb/search/gbDetailed?id=9BFCCC5CEDF30F87E05397BE0A0A747C"
+  },
+  {
+    "standard_no": "GB/T 3098.1-2010",
+    "title": "紧固件机械性能 螺栓、螺钉和螺柱",
+    "status": "current",
+    "scope_note": "规定性能等级的碳钢和合金钢螺栓、螺钉和螺柱",
+    "verified_on": "2026-07-13",
+    "source_url": "https://std.samr.gov.cn/gb/search/gbDetailedCNF?id=71F772D7DA48D3A7E05397BE0A0AB82A"
+  },
+  {
+    "standard_no": "GB/T 11345-2023",
+    "title": "焊缝无损检测 超声检测 技术、检测等级和评定",
+    "status": "current",
+    "scope_note": "焊缝超声检测技术、检测等级和评定；不替代设计验收要求",
+    "verified_on": "2026-07-13",
+    "source_url": "https://std.samr.gov.cn/gb/search/gbDetailed?id=0B4529DE1075FCAFE06397BE0A0A46CC"
+  },
+  {
+    "standard_no": "GB/T 6391-2010",
+    "title": "滚动轴承 额定动载荷和额定寿命",
+    "status": "current",
+    "scope_note": "滚动轴承基本额定动载荷和基本额定寿命",
+    "verified_on": "2026-07-13",
+    "source_url": "https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D7D5E6D3A7E05397BE0A0AB82A"
+  },
+  {
+    "standard_no": "GB/T 1800.1-2020",
+    "title": "产品几何技术规范（GPS） 线性尺寸公差ISO代号体系 第1部分：公差、偏差和配合的基础",
+    "status": "current",
+    "scope_note": "公差、偏差和配合的基础；不直接决定具体零件公差值",
+    "verified_on": "2026-07-13",
+    "source_url": "https://std.samr.gov.cn/gb/search/gbDetailed?id=A47A713B760F14ABE05397BE0A0ABB25"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "seed": 20260713,
+  "train_total": 5000,
+  "eval_total": 300,
+  "train_categories": {
+    "design_fatigue": 1200,
+    "engineering_calculation": 300,
+    "fault_diagnosis": 900,
+    "industrial_safety": 100,
+    "manufacturing_qc": 900,
+    "material_heat_treatment": 700,
+    "standard_evidence_refusal": 400,
+    "tolerance_measurement_assembly": 500
+  },
+  "schema_errors": 0,
+  "train_eval_split_group_overlap": 0,
+  "review_statuses": {
+    "self_reviewed": 5300
+  },
+  "near_duplicate_threshold": 0.9,
+  "near_duplicate_metric": "character_5gram_jaccard",
+  "same_parent_pairs_exhaustive": 60600,
+  "cross_parent_pairs_sampled": 99590,
+  "near_duplicate_pairs": [],
+  "errors": [],
+  "review_scope_note": "Same-parent variants are exhaustive; cross-parent checking is a deterministic sample, not an exhaustive all-pairs proof."
+}

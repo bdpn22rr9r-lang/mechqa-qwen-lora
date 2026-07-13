@@ -1,0 +1,10 @@
+{
+  "mech_sft_v3_5000": {
+    "file_name": "mech_sft_v3_5000.json",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    }
+  }
+}
