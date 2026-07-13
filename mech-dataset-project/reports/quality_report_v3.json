@@ -1,0 +1,81 @@
+{
+  "version": "v3",
+  "release_dir": "data/releases/v3",
+  "totals": {
+    "train": 105,
+    "validation": 15,
+    "test": 24,
+    "challenge": 24
+  },
+  "overall_total": 168,
+  "distribution": {
+    "by_task_type": {
+      "design_fatigue": 32,
+      "manufacturing_qc": 24,
+      "fault_diagnosis": 24,
+      "material_heat_treatment": 16,
+      "tolerance_measurement_assembly": 15,
+      "standard_evidence_refusal": 30,
+      "engineering_calculation": 19,
+      "industrial_safety": 8
+    },
+    "by_domain": {
+      "": 168
+    },
+    "by_source_type": {
+      "expert_authored": 168
+    },
+    "by_review_status": {
+      "v3_pending_review": 168
+    },
+    "by_difficulty": {
+      "hard": 64,
+      "medium": 104
+    }
+  },
+  "per_split_quality": {
+    "train": {
+      "total": 105,
+      "schema_invalid": 0,
+      "schema_valid_rate": 1.0,
+      "empty_output": 0,
+      "duplicate_id": 0,
+      "unsourced_numeric": 0,
+      "forbidden_pattern": 0
+    },
+    "validation": {
+      "total": 15,
+      "schema_invalid": 0,
+      "schema_valid_rate": 1.0,
+      "empty_output": 0,
+      "duplicate_id": 0,
+      "unsourced_numeric": 0,
+      "forbidden_pattern": 0
+    },
+    "test": {
+      "total": 24,
+      "schema_invalid": 0,
+      "schema_valid_rate": 1.0,
+      "empty_output": 0,
+      "duplicate_id": 0,
+      "unsourced_numeric": 0,
+      "forbidden_pattern": 0
+    },
+    "challenge": {
+      "total": 24,
+      "schema_invalid": 0,
+      "schema_valid_rate": 1.0,
+      "empty_output": 0,
+      "duplicate_id": 0,
+      "unsourced_numeric": 0,
+      "forbidden_pattern": 0
+    }
+  },
+  "plan_targets_check": {
+    "json_schema_valid_rate_100pct": true,
+    "empty_output_zero": true,
+    "duplicate_id_zero": true,
+    "note": "近似重复/泄漏由独立 check 脚本检查; MechQA 类噪声需人工核验(review_status!=expert_approved)。"
+  },
+  "honesty_note": "所有样本 review_status 应为 seed_pending_review/model_generated, 未经真人机械工程师 A 级审核,不得用于正式训练/产品。"
+}
