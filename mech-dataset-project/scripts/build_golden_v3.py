@@ -11,7 +11,7 @@ from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import schema as S
 
-AUTHOR, V3 = "claude", "v3"
+AUTHOR, V3 = "model_assisted_draft", "v3"
 
 
 def _uid(cat, *parts):
@@ -23,7 +23,9 @@ def make(cat, sub, diff, instr, inp, out, ev, cond, tags, *uidparts):
         id=_uid(cat, *uidparts), category=cat, sub_category=sub, difficulty=diff,
         language="zh", instruction=instr, input=inp, output=out,
         evidence=ev, conditions=cond, risk_tags=tags, task_type=cat,
-        source_type="expert_authored", license="pending",
+        source_type="expert_authored",
+        source_ref="reports/standard_registry.json" if "standard_citation" in tags else "",
+        license="pending",
         review_status="v3_pending_review", author=AUTHOR,
         split_group=_uid("sg", cat, *uidparts), version=V3,
     ).to_dict()
@@ -73,7 +75,7 @@ def gen_design():
     out = []
     for ok, o in SHAFT.items():
         for lk, (ln, chk, life, par) in LOAD.items():
-            bd = f"{o['fail'][lk]}对应的应力集中系数需依{o['geom']}核定；{life}结论需要{par}支撑。"
+            bd = f"{o['fail'][lk]}对应的应力集中系数需依{o['geom']}核定,且{o['name']}的{life}结论需要{par}支撑。"
             out.append(make("design_fatigue", f"shaft_{ok}", "hard" if ok != "smooth" else "medium",
                 "请识别关键风险并给出可执行的校核路径。",
                 f"对象:{o['name']}，高应力区；工况：{ln}。未提供{o['geom']}、材料状态与{par}。",
@@ -85,7 +87,7 @@ def gen_design():
                 "shaft", ok, lk))
     # 其他对象: 每个独立子主题(齿轮3/轴承3/螺栓3/焊接3/梁4 = 16), 凑到~48需再加变体但用独立问题
     EXTRA = [
-        ("gear_root_bending", "齿根弯曲疲劳齿轮", "齿根弯曲应力集中致齿根断裂", "齿根弯曲应力按 GB/T 3480-2019 方法校核", ["fatigue", "stress_concentration"]),
+        ("gear_root_bending", "齿根弯曲疲劳齿轮", "齿根弯曲应力集中致齿根断裂", "齿根弯曲强度按 GB/T 3480.3-2021 的适用范围和方法校核", ["fatigue", "stress_concentration"]),
         ("gear_pitting", "齿面点蚀齿轮", "齿面接触疲劳致点蚀剥落", "按赫兹接触应力校核齿面接触疲劳", ["wear_contact_fatigue"]),
         ("gear_scuffing", "重载高速齿轮", "齿面油膜破裂致胶合", "按闪温法或积分温度法校核胶合", ["wear_contact_fatigue", "thermal_deformation"]),
         ("bearing_loose_fit", "游隙过大轴承", "游隙过大致振动与早期点蚀", "校核配合后游隙与当量动载荷寿命", ["assembly_tolerance", "fatigue"]),
@@ -101,13 +103,25 @@ def gen_design():
         ("beam_deflection", "细长梁", "刚度不足致变形超限", "校核挠度与刚度", ["stiffness_deflection"]),
         ("plate_shear_buckling", "腹板", "腹板高剪下剪切屈曲", "校核高厚比与横向加劲肋", ["buckling_stability"]),
         ("shell_buckling", "薄壳结构", "外压下整体或局部屈曲", "按临界外压校核稳定性", ["buckling_stability"]),
+        ("shaft_ring_groove", "带挡圈槽传动轴", "挡圈槽根部截面突变形成疲劳裂纹起点", "按槽底净截面和缺口效应校核交变弯曲疲劳", ["fatigue", "stress_concentration"]),
+        ("shaft_thread_runout", "带外螺纹轴端", "螺纹收尾与退刀槽叠加应力集中", "确定危险截面并校核螺纹根部疲劳强度", ["fatigue", "stress_concentration"]),
+        ("crank_oil_hole", "带斜油孔曲轴", "油孔出口位于高应力区时易萌生疲劳裂纹", "结合弯扭载荷和油孔位置评估局部疲劳", ["fatigue", "surface_integrity"]),
+        ("press_fit_hub", "过盈配合轮毂轴", "配合边缘接触压力与交变弯曲叠加可能引起微动疲劳", "校核配合压力、边缘应力和传扭能力", ["fatigue", "wear_contact_fatigue"]),
+        ("lifting_lug", "焊接起吊耳板", "孔边承压、净截面撕裂和焊趾疲劳可能共同控制", "按实际吊装方向校核耳板与焊缝载荷路径", ["static_strength", "fatigue"]),
+        ("pin_joint", "受交变载荷销轴连接", "销孔承压磨损与板件净截面疲劳相互影响", "分别校核销轴剪弯、孔壁承压和板件净截面", ["fatigue", "wear_contact_fatigue"]),
+        ("spring_fatigue", "往复压缩弹簧", "平均应力和应力幅共同影响弹簧疲劳寿命", "结合载荷循环、应力修正和稳定性校核", ["fatigue"]),
+        ("thin_gear_rim", "薄轮缘齿轮", "轮缘柔度会改变齿根应力分布并诱发轮缘裂纹", "同时校核齿根弯曲和轮缘厚度影响", ["fatigue", "stiffness_deflection"]),
+        ("planet_carrier", "行星架销孔", "销孔载荷分配不均会造成孔边局部高应力和变形", "校核销孔承压、行星架刚度和载荷均布", ["fatigue", "stiffness_deflection"]),
+        ("eccentric_flange", "偏心受载法兰连接", "外载偏心引起连接面压力重分布和螺栓附加拉力", "建立连接刚度模型并校核不分离与螺栓疲劳", ["fatigue", "fastener_loosening"]),
+        ("coupling_hub_key", "键连接联轴器轮毂", "键槽削弱轮毂且冲击扭矩可能导致槽角裂纹", "校核键侧挤压、轮毂强度和冲击疲劳", ["fatigue", "stress_concentration"]),
+        ("frame_load_path", "螺栓连接设备机架", "连接刚度不均会造成载荷旁路和局部板件过载", "梳理载荷路径并校核连接滑移、板件和焊缝", ["static_strength", "stiffness_deflection"]),
     ]
     for ek, obj, fail, chk, tags in EXTRA:
         bd = f"{fail}的判定需结合相关几何与适用标准(记录标准号/年份/条款)核定,缺数据不下确定结论。"
         out.append(make("design_fatigue", f"{ek}", "medium",
             "请识别风险并给出校核方向。",
             f"对象:{obj}；请评估其可靠性。",
-            f"1. 失效模式：{fail}。\n2. 校核方向：{chk}。\n3. 制造/检测：关注相关质量控制与无损检测。\n边界：{bd}",
+            f"1. 失效模式：{fail}。\n2. 校核方向：{chk}。\n边界：{bd}",
             [fail[:12]], ["载荷", "几何", "材料状态", "适用标准"],
             tags + ["missing_information"], ek))
     return out[:48]
@@ -124,6 +138,10 @@ PROC = {
     "carburizing": ("渗碳淬火变形", "原因：渗碳层体积变化、淬火介质与冷却不均", "控制：控制渗层均匀性、预留磨量、压床定型、选合适介质", "检验：渗层深度与硬度梯度、变形量、磁粉探伤"),
     "roughness": ("表面粗糙度超差", "原因：刀具磨损或几何不当、进给过大、工艺系统振动", "控制：优化刀尖半径与进给、抑振、精加工保证、换刀管理", "检验：粗糙度仪测量、对照要求的 Ra/Rz 等级"),
     "symmetry": ("键槽对称度超差", "原因：装夹基准误差、分度误差、刀具偏让", "控制：校核装夹基准、提高分度精度、首件验证、刚性装夹", "检验：三坐标或量具测对称度、首件与抽检"),
+    "deep_hole": ("深孔钻削偏斜", "原因：刀具导向不足、排屑受阻、进给与冷却不稳定", "控制：采用可靠导向与分段排屑、稳定供液、监控刀具磨损", "检验：测孔轴线位置、直线度、孔径与内壁缺陷"),
+    "thin_wall": ("薄壁壳体加工变形", "原因：装夹变形、残余应力释放、切削热和余量不均", "控制：使用低变形夹紧、对称去除余量、分阶段时效与精加工", "检验：松夹后复测尺寸、平面度、圆度和壁厚分布"),
+    "thread_rolling": ("高疲劳螺纹成形", "原因：切削螺纹可能破坏材料流线并留下刀痕", "控制：在材料与结构允许时评估滚压工艺、控制坯径和模具状态", "检验：检查牙型、有效径、表面缺陷与工艺批次一致性"),
+    "nitriding": ("氮化层质量波动", "原因：表面污染、温度或气氛波动导致层深和脆性不均", "控制：规范预清洗、装炉间距、温度与介质控制并保护非氮化区", "检验：按图样要求检查层深、硬度梯度、脆性与变形"),
 }
 def gen_manufacturing():
     out = []
@@ -135,11 +153,15 @@ def gen_manufacturing():
         for sk, q, body in subs:
             if len(out) >= 36:
                 break
-            bd = f"{obj}的具体参数与判定需结合工艺规范与质量等级核定,无来源依据不引用标准编号。"
+            bd = {
+                "cause": f"以上是{obj}的候选机制,须用设备记录、工件实测和工艺追溯区分主因。",
+                "control": f"{obj}的控制窗口须经首件和过程能力验证,本条不代替正式工艺卡。",
+                "inspect": f"{obj}的验收项目与限值以图样、工艺文件和检验规范为准。",
+            }[sk]
             out.append(make("manufacturing_qc", f"mfg_{pk}", "medium",
                 q,
                 f"对象:{obj}工序。",
-                f"{body}\n关联因素：材料、几何、工艺参数、设备状态综合作用,避免单一归因。\n边界：{bd}",
+                f"{body}\n边界：{bd}",
                 [obj[:8]], ["材料", "几何", "工艺参数", "质量要求"],
                 ["manufacturing_process", "missing_information"], pk, sk))
     return out[:36]
@@ -153,6 +175,12 @@ EQ = {
     "coupling": ("联轴器端振动大", "原因：对中不良、不平衡、基础松动、共振", "排查：测振动相位与频谱、查对中与地脚、动平衡", "处置：校中、紧固、动平衡、避开共振转速"),
     "compressor": ("压缩机级间温度升高", "原因：气阀泄漏、冷却不足、积碳、级间泄漏", "排查：查冷却水温水量、气阀密封、级间压比与温度", "处置：换阀片、清积碳、修冷却器,必要时解体"),
     "pump": ("离心泵流量扬程下降", "原因：叶轮磨损、口环间隙大、汽蚀、密封泄漏", "排查：测进出口压力流量、查NPSHA防汽蚀、测口环间隙", "处置：换叶轮口环、治漏、改善吸入条件"),
+    "fan": ("风机一倍转频振动升高", "原因：叶轮积灰或损伤导致不平衡、轴弯曲、基础松动", "排查：比较径向振幅与相位、检查叶轮和轴跳动、复核基础", "处置：清理修复叶轮、校直或动平衡、紧固基础后复测"),
+    "seal": ("机械密封持续泄漏", "原因：端面损伤、轴跳动超限、冲洗不足、密封材料不适配", "排查：确认泄漏位置、检查冲洗参数、测轴跳动与窜量", "处置：纠正轴系问题并按介质复核密封材料后更换损坏件"),
+    "conveyor": ("输送带持续跑偏", "原因：滚筒托辊不正、落料偏载、张紧不均或接头不正", "排查：分别观察空载与负载轨迹、校核滚筒托辊和落料中心", "处置：先消除结构与落料根因,再逐级微调托辊和张紧"),
+    "spindle": ("机床主轴加工出现周期振纹", "原因：刀具不平衡、主轴轴承状态异常、切削参数激发颤振", "排查：做空转与切削对比、检查刀柄跳动、分析频谱和稳定区", "处置：修正刀具装夹与平衡、避开不稳定工况并评估轴承"),
+    "robot_joint": ("机器人关节热态定位误差增大", "原因：减速器热膨胀、回差变化、编码器安装或补偿不足", "排查：记录温度与误差关系、比较冷热态回差、检查机械零位", "处置：排除松动磨损后建立经验证的温度补偿"),
+    "screw_conveyor": ("螺杆输送机电流升高并卡停", "原因：物料结块或异物、叶片变形、吊轴承损坏、出料受阻", "排查：停机隔离后清料,检查出入口、轴线、间隙和轴承", "处置：清除堵塞并修复变形磨损,复核运行负荷与保护设定"),
 }
 def gen_fault():
     out = []
@@ -163,11 +191,15 @@ def gen_fault():
         for sk, q, body in subs:
             if len(out) >= 36:
                 break
-            bd = f"结论须以监测数据为证据;不得把可能原因写成唯一故障结论;处置结合具体型号与运行参数。"
+            bd = {
+                "cause": f"{symp}可能由多种因素共同造成,原因排序须由趋势、频谱和现场检查相互印证。",
+                "probe": f"{symp}的排查应保留原始数据和工况,避免检修后失去根因证据。",
+                "handle": f"{symp}的处置等级须结合报警限值、劣化速度和失效后果决定。",
+            }[sk]
             out.append(make("fault_diagnosis", f"fault_{ek}", "medium",
                 q,
                 f"设备现象:{symp}。",
-                f"{body}\n注意：区分根因与诱因,需证据闭环,区分需停机检查与可在线监测。\n边界：{bd}",
+                f"{body}\n边界：{bd}",
                 [symp[:10]], ["运行参数", "型号", "历史记录", "监测数据"],
                 ["vibration_resonance", "wear_contact_fatigue", "inspection_ndt", "missing_information"], ek, sk))
     return out[:36]
@@ -183,17 +215,24 @@ MAT = {
     "anisotropy": ("材料各向异性", "要点：轧制或锻造材料的纵向与横向力学性能不同,疲劳与断裂性能各向异性显著。设计与校核须注意取样方向。", ["fatigue", "static_strength"]),
     "corrosion": ("腐蚀环境影响", "要点：腐蚀环境降低疲劳强度(腐蚀疲劳),应力腐蚀开裂在特定材料-介质组合下危险。须评估工况介质并选耐蚀材料或防护。", ["corrosion", "fatigue"]),
 }
+MATERIAL_CONDITION_FOCUS = {
+    "常温工况": "重点核对室温拉伸、冲击和硬度等批次证明,并确认试样方向与零件截面差异。",
+    "高温工况": "除瞬时强度外还要检查蠕变、松弛、氧化及组织稳定性,使用目标温度和持续时间下的数据。",
+    "腐蚀工况": "需要介质成分、浓度、温度和应力状态,评估点蚀、腐蚀疲劳或应力腐蚀开裂。",
+    "交变载荷": "应使用与表面、尺寸、缺口和可靠度相匹配的疲劳数据,不能以抗拉强度替代寿命校核。",
+}
 def gen_material():
     out = []
     for mk, (obj, body, tags) in MAT.items():
         for cond in ["常温工况", "高温工况", "腐蚀工况", "交变载荷"]:
             if len(out) >= 28:
                 break
-            bd = f"{obj}的具体性能与工艺参数需依材料牌号、热处理状态与标准确定,硬度以材料认证数据为准。"
+            focus = MATERIAL_CONDITION_FOCUS[cond]
+            bd = f"{obj}在{cond}下的结论须由材料牌号、热处理状态、零件尺寸和可追溯数据共同支持。"
             out.append(make("material_heat_treatment", f"mat_{mk}", "medium",
                 "请说明该材料/热处理问题的要点与适用条件。",
                 f"主题:{obj};工况:{cond}。",
-                f"{body}\n在{cond}下,性能与失效模式可能不同,须针对性评估。\n边界：{bd}",
+                f"{body}\n{obj}在{cond}下的工况重点：{focus}\n边界：{bd}",
                 [body[:14]], ["材料牌号", "热处理状态", "截面尺寸", cond],
                 tags + ["missing_information"], mk, cond))
     return out[:28]
@@ -214,6 +253,11 @@ TOL = {
     "measure_uncertainty": ("测量不确定度", "测量结果含不确定度。须选合适量仪与基准、控制温度,评估不确定度是否小于公差。", ["inspection_ndt"]),
     "assembly_seq": ("装配顺序", "复杂装配的顺序影响累积误差与应力。须规划装配顺序,关键配合用选配或修配。", ["assembly_tolerance", "manufacturing_process"]),
 }
+TOLERANCE_FOCUS = {
+    "如何确定": "确定流程应从功能量和失效后果出发,建立尺寸链或配合模型,再在制造能力与成本约束下分配要求。",
+    "需要什么信息": "输入至少包括功能接口、基准体系、载荷温度、装配顺序、测量方案和过程能力数据。",
+    "常见错误": "重点防止基准不统一、公差重复约束、忽略温度与测量不确定度,以及脱离功能盲目提高精度。",
+}
 def gen_tolerance():
     out = []
     for tk, (obj, body, tags) in TOL.items():
@@ -224,7 +268,7 @@ def gen_tolerance():
             out.append(make("tolerance_measurement_assembly", f"tol_{tk}", "medium",
                 f"请说明{obj}的{focus}。",
                 f"主题:{obj};问题:{focus}。",
-                f"{body}\n关于{focus}：须结合具体功能与工况,避免脱离应用的公差给定。\n边界：{bd}",
+                f"{body}\n对于{obj},{TOLERANCE_FOCUS[focus]}\n边界：{bd}",
                 [body[:14]], ["功能要求", "工况", "公差等级", "相关标准"],
                 tags + ["missing_information"], tk, focus))
     return out[:20]
@@ -239,20 +283,22 @@ def gen_standard():
         ("no_life", "缺载荷谱问疲劳寿命", "不能给寿命数值", "载荷谱、几何应力集中、材料疲劳数据"),
         ("no_heat", "不知热处理问硬度要求", "不能给硬度数值", "材料牌号、热处理状态、工况、硬度标准"),
         ("no_weld", "无焊缝等级问是否合格", "不能判定合格", "设计焊缝等级、检测标准、检测结果"),
+        ("no_fit", "缺少功能要求直接指定轴孔配合", "不能指定配合代号", "相对运动、载荷、温度、装拆和定位要求"),
+        ("no_standard_version", "只有标准号但未确认版本与适用范围", "不能据此给出合规结论", "现行版本、标准名称、适用范围、相关条款"),
     ]
     STD = [
-        ("gear", "齿轮强度校核", "GB/T 3480-2019《渐开线圆柱齿轮承载能力计算方法》", "渐开线圆柱齿轮的接触与弯曲强度"),
+        ("gear", "齿轮强度校核", "GB/T 3480.1-2019《直齿轮和斜齿轮承载能力计算 第1部分：基本原理、概述及通用影响系数》", "直齿轮和斜齿轮承载能力计算的基本原则；接触与弯曲强度还需选用对应分册"),
         ("bolt", "螺栓力学性能", "GB/T 3098.1-2010《紧固件机械性能 螺栓、螺钉和螺柱》", "螺栓螺钉的力学性能等级"),
-        ("weld", "焊缝无损检测", "GB/T 11345-2013《焊缝无损检测 超声检测》等", "焊缝超声/射线检测的验收级别"),
+        ("weld", "焊缝超声检测", "GB/T 11345-2023《焊缝无损检测 超声检测 技术、检测等级和评定》", "焊缝超声检测技术、检测等级和评定"),
         ("bearing", "轴承额定动载荷", "GB/T 6391-2010《滚动轴承 额定动载荷和额定寿命》", "滚动轴承基本额定动载荷与寿命计算"),
     ]
     out = []
     for sk, q, refuse, missing in REFUSE:
-        bd = f"涉及{missing}的具体结论须补全后依计算或标准给出;无来源版本不引用标准编号,不编造固定数值。"
+        bd = f"针对“{q}”,须补全{missing}并依据计算或经核验资料作答。"
         out.append(make("standard_evidence_refusal", f"ref_{sk}", "hard",
             "信息不足或无依据时,请明确拒绝并说明缺什么。",
             f"问题:{q}。",
-            f"{refuse}。缺失:{missing}。补全后方可校核。\n注意:不得把可能当结论、不编造数值、不无依据引用标准。\n边界:{bd}",
+            f"{refuse}。缺失:{missing}。补全后方可校核。\n边界:{bd}",
             [refuse], ["载荷", "材料状态", "几何", "标准"],
             ["missing_information", "fabricated_value_risk"], sk))
     for sk, topic, std, scope in STD:
@@ -301,7 +347,7 @@ CALC = [
 def gen_calc():
     out = []
     for ck, name, given, proc, caveat in CALC:
-        bd = "该结果需依实际工况与材料数据复核,单位须一致,不作普适常数。"
+        bd = f"{name}的结果仅适用于题设假设,工程采用前须复核输入、单位和适用范围。"
         out.append(make("engineering_calculation", f"calc_{ck}", "medium",
             "请给出完整计算:已知、公式、过程、结果、假设、未考虑因素。",
             f"计算:{name};已知:{given}。",

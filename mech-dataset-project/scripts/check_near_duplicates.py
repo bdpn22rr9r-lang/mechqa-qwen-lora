@@ -1,6 +1,7 @@
 """近似重复检查: 基于 difflib 的文本相似度(标准库,零依赖)。
 
-对 input 文本两两计算相似度,超过阈值则告警。O(n^2),适合数千条以内。
+对 instruction + input + output 两两计算相似度,超过阈值则告警。
+只比较 input 会把同一案例的原因/控制/检验任务误判为完全重复。
 """
 from __future__ import annotations
 import os, sys, argparse, difflib
@@ -10,13 +11,14 @@ import schema as S
 
 def run(path: str, threshold: float = 0.9) -> bool:
     recs = S.load_jsonl(path)
-    inputs = [str(r.get("input", "")) for r in recs]
+    # ponytail: O(n^2) 适合阶段A/阶段B；到5000条时改用分桶或MinHash。
+    texts = ["\n".join(str(r.get(k, "")) for k in ("instruction", "input", "output")) for r in recs]
     ids = [r.get("id", "") for r in recs]
     near = []
-    n = len(inputs)
+    n = len(texts)
     for i in range(n):
         for j in range(i + 1, n):
-            r = difflib.SequenceMatcher(None, inputs[i], inputs[j]).ratio()
+            r = difflib.SequenceMatcher(None, texts[i], texts[j]).ratio()
             if r >= threshold:
                 near.append((ids[i], ids[j], round(r, 3)))
     print(f"[near_dup] {path}: {n} 条, 近似对(>= {threshold}) {len(near)}")

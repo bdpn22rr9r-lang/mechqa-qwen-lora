@@ -4,3 +4,6 @@ model_generated,data/generated/batch_shaft_fatigue.jsonl,32,internal-approved,mo
 v1v2_migrated,data/converted/migrated_v2.jsonl,80,internal-approved,seed_pending_review,从 mechqa-qwen-lora v2 迁移;v1/v2 内容近似去重保留 v2(含边界声明)
 mechqa_converted,data/converted/mechqa_converted.jsonl,50,cc-by-4.0,seed_pending_review,MechQA(mz-516/MechQA)转换;含已知自动标注噪声必须人工核验数值/性能/DOI
 ,raw source,data/raw/mechqa/dataset_example/,20100 records,cc-by-4.0 / gpl-3.0,,MechQA 原始 train_sample(18000)+val_sample(2100);商业使用前须确认许可
+model_assisted_draft,data/generated_v3/golden_v3.jsonl,200,pending,v3_pending_review,V3阶段A训练金样本初稿;须按风险等级完成人工机械工程二审
+model_assisted_draft,data/generated_v3/eval_v3.jsonl,60,pending,v3_pending_review,V3独立评测集;全部样本须人工机械工程二审
+official_standard_metadata,reports/standard_registry.json,7,public-metadata,verified,标准号/名称/状态/范围摘要来自全国标准信息公共服务平台;不包含标准正文

@@ -7,12 +7,13 @@
 | 项 | 内容 |
 |---|---|
 | **schema 升级** | `schema.py` 加 V3 字段(category/sub_category/evidence/conditions/author),按 version 分级校验,与 v0.1-seed 共存 |
-| **金样本** | 120 条,8 类(design_fatigue 26 / manufacturing_qc 24 / fault_diagnosis 18 / material 12 / tolerance 15 / standard 12 / calc 9 / safety 4) |
-| **评测集** | 48 条,严格隔离(高风险 24 / 拒绝给数值 12 / 可给数值 12,均达 V3 下限) |
-| **切分** | train 105 / validation 15 / test 24 / challenge 24;**训练池/评测池 split_group 共享=0**(严格隔离) |
-| **校验脚本(新增 4)** | check_repeated_templates(n-gram 模板)、check_vague_phrases、check_standard_citations、check_text_anomalies |
+| **金样本** | 200 条,严格满足8类配比(48 / 36 / 36 / 28 / 20 / 16 / 12 / 4) |
+| **评测集** | 60 条,严格隔离(高风险 24 / 拒绝给数值 18 / 可给数值 18) |
+| **切分** | train 172 / validation 28 / test 36 / challenge 24;**训练池/评测池 split_group 共享=0** |
+| **校验脚本** | 重复长句、空泛表达、标准台账、文本异常及原有 schema/数值/单位/泄漏检查 |
 | **流水线** | `run_pipeline_v3.py`(golden→train/val,eval→test/challenge,导出,报告) |
-| **规范文档** | `docs/v3_spec.md`(8 类配比 + V3 字段 + 禁止重复边界 + 评测约束) |
+| **规范文档** | `docs/v3_spec.md` + `docs/engineering_task_requirements.md` |
+| **标准台账** | `reports/standard_registry.json`,仅允许引用已核验现行标准 |
 
 ## 质量指标(V3 release)
 
@@ -24,21 +25,33 @@
 | 无来源数值 / 禁止编造表述 | 0 / 0 |
 | 文本异常(超长/控制字符/乱码) | 0 |
 | 空泛表达 | 0 |
+| 单位格式问题 | 0 |
+| 未登记/非现行标准引用 | 0 |
+| 重复长句模板 | 0 |
 | review_status | 全 v3_pending_review(诚实,非 approved) |
 
 ## V3 对 v0.1-seed 的关键修复
 
-1. **边界模板重复根治**:v0.1-seed 每条都复制固定 `BOUNDARY`(V2 失败主因);V3 边界说明由**(对象×工况)组合生成**,每条不同,无固定模板句。`check_repeated_templates` 检测跨样本高频 n-gram。
+1. **边界模板重复根治**:V3 边界说明由对象、工况和任务类型组合生成。`check_repeated_templates` 检测跨样本重复长句,避免短术语误报。
 2. **8 类新配比**(替代 v0.1 的 10 类),补齐制造工艺/公差测量装配/工业安全等 v0.1 缺失类别。
 3. **评测集专门构建**:不再从训练集随机 split,而是独立构建且含高风险/拒绝/可答下限。
 4. **V3 元数据**:evidence/conditions/author 字段体现"有证据、条件明确"。
 
 ## 诚实声明
 
-1. **数量 120 金 + 48 评测 ≈ 168 条**,低于 V3 阶段 A 目标 200+60。配比近似(每类按比例),正式版扩展到严格配比与 5000 条。
-2. **review_status 全为 v3_pending_review**,未经真人机械工程师二级审核。V3 第10节要求标准引用/固定数值/安全/材料性能样本二级审核 100%,评测集二级审核 100%——**本批未完成,不得用于正式训练/产品**。
-3. **标准引用缺具体年份**(GB/T 3480、GB/T 3098 未带年份):`check_standard_citations` 已标注风险;正式版须补具体年份并核验适用版本。本批未编造年份(诚实)。
-4. **n-gram 检测**:manufacturing 类内部分通用正文句(非边界模板)仍跨条重复,V3 第9节要求"报告"(已实现),正式版进一步因题异。
+1. **review_status 全为 v3_pending_review**,未经真人机械工程师二级审核。标准引用、固定数值、安全、疲劳、材料和故障结论类样本以及全部评测集仍须人工二审,本批不得用于产品声明或安全决策。
+2. 标准台账核验的是编号、年份、名称、状态和范围摘要,不能替代购买或查阅正式标准全文及条款。
+3. 本阶段达到的是数据工程自动验收,不是机械设计责任签字；进入1000条扩展前仍需负责人确认人工审核计划。
+
+## 本地复现
+
+```bash
+python scripts/build_golden_v3.py
+python scripts/build_eval_v3.py
+python scripts/run_pipeline_v3.py
+```
+
+`run_pipeline_v3.py`消费已生成文件,不会自动调用前两个构建器。修改构建规则后必须按上述顺序运行。
 
 ## 与训练衔接
 
@@ -67,4 +80,5 @@ MUSA_LAUNCH_BLOCKING=1 MUSA_VISIBLE_DEVICES=0 \
 - `data/generated_v3/golden_v3.jsonl`、`data/generated_v3/eval_v3.jsonl`
 - `data/releases/v3/`(train/validation/test/challenge × master+alpaca + dataset_info)
 - `reports/quality_report_v3.json`
-- `docs/v3_spec.md`
+- `reports/standard_registry.json`
+- `docs/v3_spec.md`、`docs/engineering_task_requirements.md`

@@ -82,8 +82,8 @@ def build(release_dir: str, version: str) -> dict:
             "duplicate_id_zero": all(s["duplicate_id"] == 0 for s in per_split.values()),
             "note": "近似重复/泄漏由独立 check 脚本检查; MechQA 类噪声需人工核验(review_status!=expert_approved)。",
         },
-        "honesty_note": ("所有样本 review_status 应为 seed_pending_review/model_generated, "
-                         "未经真人机械工程师 A 级审核,不得用于正式训练/产品。"),
+        "honesty_note": ("自动生成或模型辅助样本必须保持 pending review 状态。"
+                         "未经真人机械工程师按风险等级审核,不得用于产品声明或安全决策。"),
     }
     out = f"reports/quality_report_{version}.json"
     S.save_json(report, out)

@@ -50,9 +50,9 @@ V3 新增字段含义:
 
 已有:v0.1 的 schema/empty/duplicates/near_duplicates/numeric/forbidden/units/leakage。
 **V3 新增**(本阶段实现):
-- `check_repeated_templates`:重复前缀/后缀/高频 n-gram(检测边界模板复制)。
+- `check_repeated_templates`:跨样本重复长句(检测边界模板复制,排除正常短术语与编号标题)。
 - `check_vague_phrases`:"应按相关标准""需客户批准"等空泛表达频率。
-- `check_standard_citations`:标准编号格式(GB/T xxx-YYYY 等)+ 标准核验台账关联。
+- `check_standard_citations`:标准编号格式 + `reports/standard_registry.json` 台账关联；未登记、缺年份或非现行标准直接失败。
 - `check_text_anomalies`:中文乱码/异常控制字符/超长样本。
 
 ## 6. 与 v0.1-seed 的差异

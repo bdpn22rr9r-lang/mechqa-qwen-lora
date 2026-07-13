@@ -2,40 +2,40 @@
   "version": "v3",
   "release_dir": "data/releases/v3",
   "totals": {
-    "train": 134,
-    "validation": 22,
+    "train": 172,
+    "validation": 28,
     "test": 36,
     "challenge": 24
   },
-  "overall_total": 216,
+  "overall_total": 260,
   "distribution": {
     "by_task_type": {
-      "design_fatigue": 41,
-      "manufacturing_qc": 24,
-      "fault_diagnosis": 22,
+      "design_fatigue": 53,
+      "manufacturing_qc": 36,
+      "fault_diagnosis": 40,
       "material_heat_treatment": 36,
       "tolerance_measurement_assembly": 20,
-      "standard_evidence_refusal": 39,
+      "standard_evidence_refusal": 41,
       "engineering_calculation": 26,
       "industrial_safety": 8
     },
     "by_domain": {
-      "": 216
+      "": 260
     },
     "by_source_type": {
-      "expert_authored": 216
+      "expert_authored": 260
     },
     "by_review_status": {
-      "v3_pending_review": 216
+      "v3_pending_review": 260
     },
     "by_difficulty": {
-      "hard": 70,
-      "medium": 146
+      "hard": 72,
+      "medium": 188
     }
   },
   "per_split_quality": {
     "train": {
-      "total": 134,
+      "total": 172,
       "schema_invalid": 0,
       "schema_valid_rate": 1.0,
       "empty_output": 0,
@@ -44,7 +44,7 @@
       "forbidden_pattern": 0
     },
     "validation": {
-      "total": 22,
+      "total": 28,
       "schema_invalid": 0,
       "schema_valid_rate": 1.0,
       "empty_output": 0,
@@ -77,5 +77,5 @@
     "duplicate_id_zero": true,
     "note": "近似重复/泄漏由独立 check 脚本检查; MechQA 类噪声需人工核验(review_status!=expert_approved)。"
   },
-  "honesty_note": "所有样本 review_status 应为 seed_pending_review/model_generated, 未经真人机械工程师 A 级审核,不得用于正式训练/产品。"
+  "honesty_note": "自动生成或模型辅助样本必须保持 pending review 状态。未经真人机械工程师按风险等级审核,不得用于产品声明或安全决策。"
 }

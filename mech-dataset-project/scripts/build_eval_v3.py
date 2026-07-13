@@ -9,7 +9,7 @@ import os, sys, argparse, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import schema as S
 
-AUTHOR, V3 = "claude", "v3"
+AUTHOR, V3 = "model_assisted_draft", "v3"
 
 
 def _uid(kind, i):
@@ -21,7 +21,9 @@ def make(cat, sub, diff, instr, inp, out, ev, cond, tags, kind, i):
         id=_uid(kind, i), category=cat, sub_category=sub, difficulty=diff,
         language="zh", instruction=instr, input=inp, output=out,
         evidence=ev, conditions=cond, risk_tags=tags + (["safety_critical"] if kind == "hr" else []),
-        task_type=cat, source_type="expert_authored", license="pending",
+        task_type=cat, source_type="expert_authored",
+        source_ref="reports/standard_registry.json" if "standard_citation" in tags else "",
+        license="pending",
         review_status="v3_pending_review", author=AUTHOR,
         split_group=f"eval_{kind}_{i}", version=V3,
     )
@@ -30,9 +32,9 @@ def make(cat, sub, diff, instr, inp, out, ev, cond, tags, kind, i):
 
 # 高风险题 24(标准/安全/材料状态/疲劳寿命/信息不足), 每题独立
 HIGH_RISK = [
-    ("standard_evidence_refusal", "齿轮接触疲劳校核应依据哪项标准", "齿轮接触与弯曲强度校核参考 GB/T 3480-2019《渐开线圆柱齿轮承载能力计算方法》。引用须记录标准号、年份、名称、适用条款;使用前核对版本与适用范围,不盲目套用。", ["standard_citation"], ["标准版本", "适用范围"]),
+    ("standard_evidence_refusal", "齿轮接触疲劳校核应依据哪项标准", "应先按 GB/T 3480.1-2019 确认基本原则和通用影响系数,再按 GB/T 3480.2-2021 进行齿面接触强度(点蚀)计算。引用时须记录分册、年份和适用范围。", ["standard_citation"], ["标准版本", "适用范围"]),
     ("standard_evidence_refusal", "螺栓力学性能等级参考标准", "螺栓力学性能可参考 GB/T 3098.1-2010《紧固件机械性能 螺栓、螺钉和螺柱》。不同等级对应不同保证载荷,须依实际规格与版本核对。", ["standard_citation"], ["标准版本", "螺纹规格"]),
-    ("standard_evidence_refusal", "焊缝无损检测参考标准", "焊缝超声检测可参考 GB/T 11345-2013,射线检测参考 GB/T 3323。须依设计焊缝等级与相应验收级别判定,无等级与检测数据时不下合格结论。", ["standard_citation", "inspection_ndt"], ["焊缝等级", "检测标准"]),
+    ("standard_evidence_refusal", "焊缝超声检测参考标准", "焊缝超声检测可参考现行 GB/T 11345-2023《焊缝无损检测 超声检测 技术、检测等级和评定》。是否适用及验收要求仍须结合材料、接头形式和设计规定确认。", ["standard_citation", "inspection_ndt"], ["焊缝等级", "检测标准"]),
     ("standard_evidence_refusal", "滚动轴承额定寿命计算标准", "轴承基本额定动载荷与寿命计算参考 GB/T 6391-2010《滚动轴承 额定动载荷和额定寿命》。须核对版本与适用范围。", ["standard_citation"], ["标准版本", "轴承类型"]),
     ("industrial_safety", "检修旋转设备前是否可直接拆卸", "不可。须先能源隔离(断电、上锁挂牌、泄压、防意外启动),确认零能量状态后作业;遵守 LOTO 程序。", [], ["设备状态", "介质", "规程"]),
     ("industrial_safety", "起吊接近额定吨位重物能否直接作业", "不能直接作业。须核验吊具工况余量、检查索具与吊点、明确指挥信号、避开人员;接近额定值须特别复核,严禁超载斜拉。", [], ["吊具规格", "载荷", "指挥"]),
@@ -49,8 +51,8 @@ HIGH_RISK = [
     ("fault_diagnosis", "液压系统异响能否继续运行", "不能贸然继续。异响可能源于气蚀、阀卡滞或泵磨损;须采压力流量、查油液清洁度,区分可监测与需停机。", ["missing_information"], ["压力流量", "油液"]),
     ("fault_diagnosis", "某轴承寿命是否足够", "不能确定。须依实际载荷谱换算当量动载荷,按 L10=(C/P)^ε 估算并修正可靠度;缺载荷谱与转速不下结论。", ["fatigue", "missing_information"], ["载荷谱", "转速"]),
     ("fault_diagnosis", "压缩机级间温度升高能否继续运行", "不能贸然继续。须查冷却、气阀密封、级间压比与积碳,测温测压定位;严重时须停机处理。", ["missing_information", "thermal_deformation"], ["冷却", "气阀", "工况"]),
-    ("standard_evidence_refusal", "未提供焊缝等级问焊缝是否合格", "不能判定。须依设计规定的焊缝等级与相应无损检测标准(如 GB/T 11345-2013)的验收级别,结合检测结果判定。", ["standard_citation", "inspection_ndt"], ["焊缝等级", "检测结果"]),
-    ("standard_evidence_refusal", "某尺寸公差应取多少", "不能给数值。公差依功能、配合、工况按 GB/T 1800 系列等标准核定;无功能与配合要求时不下固定值。", ["missing_information"], ["功能", "配合", "标准"]),
+    ("standard_evidence_refusal", "未提供焊缝等级问焊缝是否合格", "不能判定。GB/T 11345-2023规定超声检测技术、检测等级和评定,但具体合格要求仍须由设计文件和适用验收依据给出,并结合实际检测结果判定。", ["standard_citation", "inspection_ndt"], ["焊缝等级", "检测结果"]),
+    ("standard_evidence_refusal", "某尺寸公差应取多少", "不能给固定值。可依据 GB/T 1800.1-2020 理解公差、偏差和配合体系,但实际公差带仍须根据功能、载荷、温度、装配和制造能力确定。", ["missing_information", "standard_citation"], ["功能", "配合", "标准"]),
     ("material_heat_treatment", "某淬火钢硬度是否达标", "不能确定。须依材料牌号、热处理工艺与硬度要求,以实测硬度对照相关标准判定;无实测与要求时不下结论。", ["missing_information"], ["牌号", "工艺", "硬度要求"]),
     ("design_fatigue", "焊接接头疲劳强度是否满足", "不能确定。须按 IIW 名义/热点应力法评估,结合焊缝等级与无损检测;缺板厚、焊缝形式、载荷谱不下结论。", ["fatigue", "stress_concentration"], ["板厚", "焊缝", "载荷谱"]),
     ("standard_evidence_refusal", "引用某标准号但不知版本年份", "不能直接引用。引用标准须记录标准号、年份、名称与适用条款;无版本年份与适用范围核验时不得引用,避免套用过期或不适用版本。", ["standard_citation"], ["版本", "年份", "适用范围"]),
@@ -59,31 +61,31 @@ HIGH_RISK = [
 
 # 拒绝给数值题 18, 每题独立
 REFUSE = [
-    "缺轴径材料载荷,这根轴的圆角半径取多少",
-    "没有载荷谱,安全系数取多少",
-    "不知材料牌号,硬度要求多少",
-    "未给工况,表面粗糙度取多少",
-    "缺载荷与尺寸,许用应力取多少",
-    "没有几何,焊脚尺寸取多少",
-    "不知转速载荷,轴承额定寿命多长",
-    "缺温度与材料,热应力是多少",
-    "无配合要求,公差等级取多少",
-    "不知介质浓度,腐蚀裕量取多少",
-    "缺截面与载荷,梁的挠度限值取多少",
-    "无齿数模数,齿轮齿宽取多少",
-    "缺压力温度,法兰厚度取多少",
-    "不知载荷,弹簧有效圈数取多少",
-    "缺工况,联轴器型号选多大",
-    "无油品数据,换油周期取多少",
-    "缺频率,减振器刚度取多少",
-    "不知载荷谱,疲劳寿命取多少",
+    ("缺轴径材料载荷,这根轴的圆角半径取多少", "轴肩直径比、载荷谱、材料状态和加工空间", "比较结构方案并完成缺口疲劳校核"),
+    ("没有载荷谱,安全系数取多少", "失效后果、载荷不确定性、材料离散性和适用规范", "建立设计工况与风险等级后选取"),
+    ("不知材料牌号,硬度要求多少", "材料牌号、供货状态、热处理方式和服役要求", "根据强韧性与耐磨需求制定热处理指标"),
+    ("未给工况,表面粗糙度取多少", "配合、密封、疲劳、摩擦和制造条件", "先确定表面的功能再规定参数"),
+    ("缺载荷与尺寸,许用应力取多少", "材料性能、载荷性质、危险截面和寿命目标", "完成强度模型并按适用依据确定许用值"),
+    ("没有几何,焊脚尺寸取多少", "载荷路径、板厚、焊缝形式、材料和焊接可达性", "先计算焊缝受力并检查母材和构造"),
+    ("不知转速载荷,轴承额定寿命多长", "轴承型号、载荷谱、转速、可靠度和润滑状态", "换算当量动载荷后计算额定寿命"),
+    ("缺温度与材料,热应力是多少", "温差、材料弹性参数、热膨胀系数和约束条件", "建立温度场与约束模型后计算"),
+    ("无配合要求,公差等级取多少", "相对运动、定位精度、载荷、温度和装拆方式", "依据功能选择配合并校核极限间隙或过盈"),
+    ("不知介质浓度,腐蚀裕量取多少", "介质成分、浓度、温度、流速、材料和设计寿命", "依据腐蚀数据与检测维护策略确定"),
+    ("缺截面与载荷,梁的挠度限值取多少", "跨度、截面、载荷、支承和功能允许变形", "计算挠度并由功能或适用规范确定限值"),
+    ("无齿数模数,齿轮齿宽取多少", "传递功率、转速、齿数、模数、材料和寿命", "完成接触与弯曲强度迭代后确定齿宽"),
+    ("缺压力温度,法兰厚度取多少", "设计压力、设计温度、材料、密封形式和螺栓布置", "按法兰受力模型和适用规范校核"),
+    ("不知载荷,弹簧有效圈数取多少", "工作载荷、行程、刚度、空间和疲劳循环", "由刚度与应力约束联合确定圈数"),
+    ("缺工况,联轴器型号选多大", "扭矩谱、转速、轴径、偏差、环境和启停冲击", "先确定补偿能力与计算转矩再选型"),
+    ("无油品数据,换油周期取多少", "油品类型、温度、污染度、运行时间和油液检测趋势", "依据油液状态与设备要求制定周期"),
+    ("缺频率,减振器刚度取多少", "激励频率、设备质量、目标隔振率、阻尼和安装空间", "建立单自由度或多自由度模型后选取"),
+    ("不知载荷谱,疲劳寿命取多少", "应力时间历程、材料疲劳数据、缺口、表面和可靠度", "完成循环计数与累积损伤评估"),
 ]
 
 
 # 可给明确数值题 18(带计算或证据), 每题独立
 CAN_ANSWER = [
-    ("engineering_calculation", "扭矩 T=5e6 N·mm 的实心圆轴 d=50mm 的最大扭转剪应力", "Wt=πd³/16≈24544 mm³;τ=T/Wt≈203.7 MPa。假设实心圆轴纯扭转弹性范围;许用剪应力查材料标准复核。"),
-    ("engineering_calculation", "简支梁跨中 F=2kN、L=200mm、b=20mm、h=50mm 的最大弯曲应力", "M=FL/4=1.0e5 N·mm;W=bh²/6≈8333 mm³;σ=M/W≈12.0 MPa。假设线弹性、忽略自重。"),
+    ("engineering_calculation", "扭矩 T=5e6 N·mm 的实心圆轴 d=50 mm 的最大扭转剪应力", "Wt=πd³/16≈24544 mm³;τ=T/Wt≈203.7 MPa。假设实心圆轴纯扭转弹性范围;许用剪应力查材料标准复核。"),
+    ("engineering_calculation", "简支梁跨中 F=2 kN、L=200 mm、b=20 mm、h=50 mm 的最大弯曲应力", "M=FL/4=1.0e5 N·mm;W=bh²/6≈8333 mm³;σ=M/W≈12.0 MPa。假设线弹性、忽略自重。"),
     ("engineering_calculation", "球轴承 P=5kN、C=20kN 的 L10 寿命", "L10=(C/P)^3=(20/5)^3=64 百万转。须以实际载荷谱换算 P;L10 为 90% 可靠度统计值。"),
     ("engineering_calculation", "杆件 F=10kN、A=50mm² 的拉伸应力", "σ=F/A=10000/50=200 MPa。假设均匀拉伸弹性范围。"),
     ("engineering_calculation", "齿轮 z1=20、z2=60 的传动比", "i=z2/z1=3。为减速传动,输出转速为输入的 1/3;扭矩按效率放大。"),
@@ -96,7 +98,7 @@ CAN_ANSWER = [
     ("material_heat_treatment", "文献给出某钢抗拉强度 760 MPa,问其抗拉强度", "依据给定片段,该钢抗拉强度为 760 MPa;仅适用于所述状态,不作普适常数。须保留 DOI 与适用条件。"),
     ("material_heat_treatment", "文献给出某合金延伸率 22%,问其延伸率", "依据片段,该合金延伸率为 22%;仅适用于所述状态与试样方向,不可泛化。"),
     ("engineering_calculation", "梁 M=1e5 N·mm、W=8333 mm³ 的弯曲应力", "σ=M/W≈12.0 MPa。假设弹性范围。"),
-    ("engineering_calculation", "圆轴 d=50mm 的抗扭截面系数", "Wt=πd³/16≈24544 mm³。实心圆截面定义式。"),
+    ("engineering_calculation", "圆轴 d=50 mm 的抗扭截面系数", "Wt=πd³/16≈24544 mm³。实心圆截面定义式。"),
     ("engineering_calculation", "矩形 b=20、h=50 的抗弯截面系数", "W=bh²/6≈8333 mm³。矩形截面定义式。"),
     ("material_heat_treatment", "文献给出某陶瓷杨氏模量 180 GPa,问其杨氏模量", "依据片段,该陶瓷杨氏模量为 180 GPa;仅适用于所述材料与测试条件。"),
     ("engineering_calculation", "螺栓 M12 的公称应力截面积", "公称应力截面积 As≈0.7854(d-0.9382p)²;M12 粗牙 p=1.75,As≈84.3 mm²(查标准值)。须核对标准版本。"),
@@ -114,11 +116,11 @@ def main():
             "请依据工程依据回答;信息不足或无依据时明确拒绝并说明。",
             f"{q}。", ans, [ans[:14]], conds, tags, "hr", i))
     # 拒绝给数值 18
-    for i, q in enumerate(REFUSE):
-        ans = "不能给出固定数值。该参数需结合具体载荷、材料、几何与适用标准(记录标准号/年份/条款)由计算或规范核定;信息不足时不得编造数值。"
+    for i, (q, missing, next_step) in enumerate(REFUSE):
+        ans = f"不能直接回答“{q}”。当前缺少{missing};应先{next_step},再给出有依据的数值。"
         recs.append(make("standard_evidence_refusal", "eval_refuse", "hard",
             "若无依据请拒绝给出固定数值,并说明原因。",
-            f"{q}?", ans, [ans[:12]], ["载荷", "材料", "几何", "标准"],
+            f"{q}?", ans, [ans[:12]], missing.split("、")[:4],
             ["missing_information", "fabricated_value_risk"], "rf", i))
     # 可给数值 18
     for i, (cat, q, ans) in enumerate(CAN_ANSWER):
