@@ -2,55 +2,55 @@
   "version": "v3",
   "release_dir": "data/releases/v3",
   "totals": {
-    "train": 931,
-    "validation": 194,
+    "train": 1455,
+    "validation": 300,
     "test": 36,
     "challenge": 24
   },
-  "overall_total": 1185,
+  "overall_total": 1815,
   "distribution": {
     "by_task_type": {
       "design_fatigue": 578,
       "fault_diagnosis": 310,
-      "manufacturing_qc": 168,
-      "material_heat_treatment": 36,
+      "manufacturing_qc": 750,
+      "material_heat_treatment": 84,
       "tolerance_measurement_assembly": 20,
       "standard_evidence_refusal": 39,
       "engineering_calculation": 26,
       "industrial_safety": 8
     },
     "by_domain": {
-      "": 1185
+      "": 1815
     },
     "by_source_type": {
-      "expert_authored": 1185
+      "expert_authored": 1815
     },
     "by_review_status": {
-      "self_reviewed": 1125,
+      "self_reviewed": 1755,
       "v3_pending_review": 60
     },
     "by_difficulty": {
-      "hard": 396,
-      "medium": 789
+      "hard": 606,
+      "medium": 1209
     }
   },
   "per_split_quality": {
     "train": {
-      "total": 931,
+      "total": 1455,
       "schema_invalid": 0,
       "schema_valid_rate": 1.0,
       "empty_output": 0,
       "duplicate_id": 0,
-      "unsourced_numeric": 9,
+      "unsourced_numeric": 15,
       "forbidden_pattern": 0
     },
     "validation": {
-      "total": 194,
+      "total": 300,
       "schema_invalid": 0,
       "schema_valid_rate": 1.0,
       "empty_output": 0,
       "duplicate_id": 0,
-      "unsourced_numeric": 3,
+      "unsourced_numeric": 4,
       "forbidden_pattern": 0
     },
     "test": {
