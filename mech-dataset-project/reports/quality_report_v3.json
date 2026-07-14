@@ -2,15 +2,15 @@
   "version": "v3",
   "release_dir": "data/releases/v3",
   "totals": {
-    "train": 134,
+    "train": 125,
     "validation": 22,
     "test": 36,
     "challenge": 24
   },
-  "overall_total": 216,
+  "overall_total": 207,
   "distribution": {
     "by_task_type": {
-      "design_fatigue": 41,
+      "design_fatigue": 32,
       "manufacturing_qc": 24,
       "fault_diagnosis": 22,
       "material_heat_treatment": 36,
@@ -20,27 +20,28 @@
       "industrial_safety": 8
     },
     "by_domain": {
-      "": 216
+      "": 207
     },
     "by_source_type": {
-      "expert_authored": 216
+      "expert_authored": 207
     },
     "by_review_status": {
-      "v3_pending_review": 216
+      "self_reviewed": 147,
+      "v3_pending_review": 60
     },
     "by_difficulty": {
       "hard": 70,
-      "medium": 146
+      "medium": 137
     }
   },
   "per_split_quality": {
     "train": {
-      "total": 134,
+      "total": 125,
       "schema_invalid": 0,
       "schema_valid_rate": 1.0,
       "empty_output": 0,
       "duplicate_id": 0,
-      "unsourced_numeric": 0,
+      "unsourced_numeric": 5,
       "forbidden_pattern": 0
     },
     "validation": {

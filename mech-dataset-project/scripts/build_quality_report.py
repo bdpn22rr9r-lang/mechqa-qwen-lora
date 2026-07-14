@@ -36,8 +36,8 @@ def analyze(recs: list) -> dict:
         if r.get("task_type") in CN.EXEMPT:
             continue
         out = str(r.get("output", "")); inp = str(r.get("input", ""))
-        out_nums = {CN.norm_num(x) for x in CN.NUM_RE.findall(out)}
-        src_nums = {CN.norm_num(x) for x in CN.NUM_RE.findall(inp)}
+        out_nums = {CN.norm_num(x) for x in CN.NUM_RE.findall(CN.strip_ranges(out))}
+        src_nums = {CN.norm_num(x) for x in CN.NUM_RE.findall(CN.strip_ranges(inp))}
         if any(n not in src_nums for n in out_nums):
             unsourced += 1
         if r.get("task_type") not in CF.EXEMPT and CF.FORBIDDEN.findall(out):

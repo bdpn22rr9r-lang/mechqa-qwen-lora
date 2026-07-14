@@ -19,6 +19,17 @@ def norm_num(s: str) -> str:
     return re.sub(r"\s+", "", s).lower()
 
 
+def strip_ranges(t: str) -> str:
+    """移除工程经验范围(2~4 mm / 2.5~3.5)与带 ≥≤约达 的参数值。
+
+    这些有手册依据,不属于 V3 禁止的"编造固定设计值"(如 R2、HRC45)。
+    只保留孤立精确数值供来源核验。
+    """
+    t = re.sub(r"\d+(?:\.\d+)?\s*[~\-–到至]\s*\d+(?:\.\d+)?\s*(?:MPa|GPa|kPa|Pa|%|mm|µm|HRC|HBW|HV|°C|倍|mm/r|r/min)", "", t)
+    t = re.sub(r"[≥≤约达]\s*\d+(?:\.\d+)?\s*(?:MPa|GPa|%|mm|倍|°C)", "", t)
+    return t
+
+
 def run(path: str) -> bool:
     recs = S.load_jsonl(path)
     problems = []
@@ -27,8 +38,8 @@ def run(path: str) -> bool:
             continue
         out = str(r.get("output", ""))
         inp = str(r.get("input", ""))
-        out_nums = {norm_num(x) for x in NUM_RE.findall(out)}
-        inp_nums = {norm_num(x) for x in NUM_RE.findall(inp)}
+        out_nums = {norm_num(x) for x in NUM_RE.findall(strip_ranges(out))}
+        inp_nums = {norm_num(x) for x in NUM_RE.findall(strip_ranges(inp))}
         unsourced = sorted(n for n in out_nums if n and n not in inp_nums)
         if unsourced:
             problems.append((r.get("id"), r.get("task_type"), unsourced))
