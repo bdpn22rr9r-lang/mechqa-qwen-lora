@@ -27,7 +27,16 @@ def main():
     os.makedirs(release_dir, exist_ok=True)
     os.makedirs("reports", exist_ok=True)
 
-    golden = S.load_jsonl(a.golden)
+    # 自动收集 data/generated_v3/ 下所有训练批次(除 eval_v3),支持多批累加
+    import glob
+    golden = []
+    batch_files = []
+    for f in sorted(glob.glob("data/generated_v3/*.jsonl")):
+        if "eval_v3" in f:
+            continue
+        n_before = len(golden)
+        golden.extend(S.load_jsonl(f))
+        batch_files.append((os.path.basename(f), len(golden) - n_before))
     evalr = S.load_jsonl(a.eval)
 
     # golden -> train / validation (按 split_group 整组, 确定性哈希)
@@ -54,7 +63,7 @@ def main():
     S.save_jsonl(test, os.path.join(release_dir, "test_master.jsonl"))
     S.save_jsonl(challenge, os.path.join(release_dir, "challenge_master.jsonl"))
 
-    print(f"[v3-pipeline] golden={len(golden)} eval={len(evalr)}")
+    print(f"[v3-pipeline] golden={len(golden)} eval={len(evalr)} (批次: {batch_files})")
     print(f"  train={len(train)} validation={len(val)} test={len(test)} challenge={len(challenge)}")
 
     # 泄漏自检: train/val(golden) 与 test/challenge(eval) 不共享 split_group
