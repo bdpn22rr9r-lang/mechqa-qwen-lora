@@ -1,25 +1,43 @@
-# Python
+# ===== 模型权重 / checkpoint(大文件,只登记哈希不入库) =====
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+*.gguf
+*.pth
+checkpoints/
+models/**/*.safetensors
+models/**/*.bin
+models/**/*.gguf
+
+# ===== 原始 / 生成数据(大文件,只记录哈希与路径) =====
+data/raw/
+data/processed/*.json
+data/processed/*.jsonl
+!data/processed/.gitkeep
+
+# ===== 日志 =====
+logs/
+*.log
+training/logs/
+
+# ===== Python =====
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv/
+venv/
 
-# mech-dataset-project: 第三方原始数据(可重新 clone, 不入库以控制仓库体积)
-# 已转换的 data/converted/ 与自产 data/generated/ 仍入库
-mech-dataset-project/data/raw/mechqa/
+# ===== 评测产物(大,只记录指标) =====
+eval/trajectories/
+eval/results/
 
-# 流水线中间产物
-mech-dataset-project/data/releases/*/_pool.jsonl
-
-# 模型权重/训练输出(不入库)
-*.safetensors
-*.bin
-*.ckpt
-*.pt
-outputs/
-checkpoints/
-
-# IDE/系统
+# ===== IDE / 系统 =====
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# ===== 临时 =====
+*.tmp
+tmp/

@@ -1,72 +1,61 @@
-# mechqa-qwen-lora
+# AgenticQwen MUSA 开源复现项目
 
-基于 `Qwen2.5-7B-Instruct` 的机械工程 LoRA SFT **数据交付仓库**：存放经审校的训练/评测数据集、验证过的训练配置和远程执行脚本，供远程摩尔线程 GPU 训练服务器 `git clone` 后直接使用。
+> 在 8×MTT S5000(摩尔线程 MUSA)服务器上,分级复现 AgenticQwen 的公开模型、公开数据流水线、工具交互评测和最小 GRPO 训练闭环。
+>
+> 版本 V1.0 · 立项 2026-07-15 · 平台 worker31005 / 8×MTT S5000 / MUSA
 
-> 上游训练项目：`Codex_LongTerm_Workbench/projects/2026-07-09_model-training`（远程服务器 `worker31005`，8×MTT S5000）。本仓库是它的「数据 + 配置 + 脚本」交付物，不是训练产物本体。
+## 核心原则(铁律)
 
-## 项目状态
+1. **可审计、可重复、不夸大。** 每个结论必须有命令、日志、checkpoint 和错误记录支撑。
+2. **兼容性失败也是有效结论。** 不预设 GRPO 一定能在 MUSA 跑通;定位不到最小阻塞点并给出可复查证据,同样是成功。
+3. **与原 LightMech / mechqa-qwen-lora 资产完全隔离。**(任务书 4.1.1)本仓库不复用、不覆盖原项目的数据与代码。
+4. **MUSA-only。** 除任务书明确的条件范围,不切换到 H100/CUDA 或外部云 GPU。
+5. **不静默改 SFT 冒充 GRPO。**(任务书 4.3)只有 R5 最小 GRPO 闭环通过,才允许表述"完成训练链路复现"。
 
-- 当前阶段：**第一阶段完成**（训练链路验证 + 首批 80 条数据交付）
-- 最后更新：2026-07-10
-- GitHub：https://github.com/bdpn22rr9r-lang/mechqa-qwen-lora
+复现等级与 Go/No-Go 见 [docs/05_reproduction_levels.md](docs/05_reproduction_levels.md);禁止表述见 [docs/06_forbidden_claims.md](docs/06_forbidden_claims.md)。
 
-## 仓库内容
+## 目录结构
 
 ```text
-mechqa-qwen-lora/
-├── README.md                 # 本文件（项目总览）
-├── REQUIREMENTS.md           # 需求、范围、验收标准
-├── TECH_STACK.md             # 模型/框架/硬件/容器/关键参数
-├── DEV_LOG.md                # 开发记录（环境搭建→NaN 定位→数据交付）
-├── PITFALL_LOG.md            # 项目踩坑（SDPA/dtype/musify/数据噪声）
-├── SOP.md                    # 数据构建→上传→注册→训练→推理流程
-├── RETROSPECTIVE.md          # 第一阶段复盘 + 第二阶段规划
-└── mech-qwen-sft-v1/         # v1 数据交付包
-    ├── README.md
-    ├── datasets/mech_sft_v1_80.json     # 80 条训练样本
-    ├── eval/mech_eval_v1_20.json        # 20 条评测样本（不参与训练）
-    ├── configs/qwen25_7b_mech_lora_sft_v1_80.yaml   # 验证过的单卡训练配置
-    └── scripts/build_mech_dataset_v1.py # 远程生成/校验/复制/注册脚本
+.
+├── 00_PROJECT_TASK_BOOK.md      # 项目任务书(权威)
+├── README.md                     # 本文件
+├── docs/                         # R0 工程冻结文档
+│   ├── 01_conventions.md         #   命名/目录/日志规范
+│   ├── 02_source_registry.md     #   来源登记(论文/仓库/模型/数据/评测 commit+哈希)
+│   ├── 03_risk_register.md       #   风险登记
+│   ├── 04_decision_log.md        #   决策记录(倒序)
+│   ├── 05_reproduction_levels.md #   复现等级 R0-R7 + Go/No-Go
+│   └── 06_forbidden_claims.md    #   禁止表述(防夸大)
+├── env/                          # R1 只读环境验收(GPU/驱动/容器/网络)
+├── models/                       # R2 checkpoint 登记与对比(大文件不入库)
+├── data/                         # R3 公开数据流水线(校验/质量/泄漏)
+├── eval/                         # R2/R6 同协议评测题集与评分器
+├── musa_compat/                  # R4 MUSA 兼容矩阵(verl/SGLang/Ray/FSDP/MCCL)
+├── training/                     # R5/R6 GRPO 配置/脚本
+├── reports/                      # 各阶段验收与结题报告
+└── .gitignore                    # 忽略 checkpoint/大模型/原始数据/日志
 ```
 
-## 训练数据类别配比（v1，共 80 条）
+`checkpoints/`、`logs/` 在 `.gitignore` 中,不入库(只记录路径与哈希)。
 
-| 类别 | 数量 |
-|---|---:|
-| 机械设计审查 | 24 |
-| 制造工艺规划 | 20 |
-| 设备故障诊断 | 20 |
-| 安全/信息不足与拒绝编造 | 8 |
-| 带证据的材料性能抽取（MechQA，人工核验） | 8 |
-| **合计** | **80** |
+## 当前进度
 
-另建 20 条固定评测集，不参与训练。
+- **R0 工程冻结(进行中)**:任务书、规范、来源/风险/决策/复现等级/禁止表述文档已建立。
+- R1-R7:未开始,严格按 Go/No-Go 顺序推进。
 
-## 远程使用方式（摘要）
-
-在远程 `mech-qwen-sft-official` 容器内：
+## 快速开始
 
 ```bash
-cd /workspace/mech-qwen-sft
-git clone https://github.com/bdpn22rr9r-lang/mechqa-qwen-lora.git imports/mechqa-qwen-lora
-python imports/mechqa-qwen-lora/scripts/build_mech_dataset_v1.py   # 生成/校验/注册数据集
-# 审阅数据后，用稳定基线训练：
-MUSA_LAUNCH_BLOCKING=1 MUSA_VISIBLE_DEVICES=0 \
-  llamafactory-cli train /workspace/mech-qwen-sft/configs/qwen25_7b_mech_lora_sft_v1_80.yaml \
-  2>&1 | tee /workspace/mech-qwen-sft/logs/mech_sft_v1_80.log
+# R0: 通读任务书与 docs/ 全部规范,确认来源登记与禁止表述
+# R1: 按 env/ 的验收清单做只读环境复核(不改原资产)
+# R2-R7: 逐阶段执行,每阶段产出报告到 reports/,过 Go/No-Go 才进下一阶段
 ```
 
-完整流程见 `SOP.md`；训练稳定基线见 `TECH_STACK.md`。
+## 来源
 
-## 重要约束
+论文、作者仓库、模型、数据、评测的具体 commit 与哈希见 [docs/02_source_registry.md](docs/02_source_registry.md)(R0 阶段逐项冻结填写)。
 
-- v1 数据是**训练验证初稿，不是工业认证语料**；产品化前需机械工程人员逐条审校。
-- 训练/推理必须显式 `flash_attn: disabled` + `bf16`（MUSA SDPA 反向会产 NaN，详见 `PITFALL_LOG.md`）。
-- 执行任何任务前，先读 Workspace 全局文档（`00_Global/`）+ 本项目文档。
+## 成功定义(任务书 §9)
 
-## 关键入口
-
-- 想了解「为什么这么做」→ `DEV_LOG.md`、`RETROSPECTIVE.md`
-- 想跑训练 → `SOP.md`、`TECH_STACK.md`
-- 踩坑速查 → `PITFALL_LOG.md`
-- 数据怎么来的 → `mech-qwen-sft-v1/README.md`、`SOP.md`
+满足以下**任一**且证据完整,均为有效成果:① MUSA 上完成公开 checkpoint 与数据流程的可重复复现;② MUSA 上完成最小 GRPO 闭环;③ 明确定位无法完成 GRPO 的最小兼容性阻塞点并给可复查证据。**只有第②项完成,才能表述为"MUSA 上完成 AgenticQwen 训练链路复现"。**
